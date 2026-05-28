@@ -1,4 +1,5 @@
 package com.example.rewardsapi.service;
+
 import com.example.rewardsapi.model.Transaction;
 import com.example.rewardsapi.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
@@ -7,7 +8,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Handles reward calculation logic
+/**
+ * Service class responsible for reward calculation logic.
+ * It processes customer transactions and calculates monthly
+ * as well as total reward points.
+ */
 @Service
 public class RewardService {
 
@@ -17,8 +22,23 @@ public class RewardService {
         this.transactionRepository = transactionRepository;
     }
 
-    // Calculate points based on amount
+    /**
+     * Calculates reward points based on transaction amount.
+     *
+     * Rules:
+     * - 2 points for every dollar spent above 100
+     * - 1 point for every dollar spent between 50 and 100
+     * - No points for amount <= 50
+     *
+     * @param amount transaction amount
+     * @return calculated reward points
+     */
     public int calculatePoints(double amount) {
+
+        // validate input
+        if (amount < 0) {
+            throw new IllegalArgumentException("Transaction amount cannot be negative");
+        }
 
         int points = 0;
 
@@ -32,7 +52,14 @@ public class RewardService {
         return points;
     }
 
-    // Calculate monthly + total rewards per customer
+    /**
+     * Calculates monthly and total reward points for each customer.
+     *
+     * The result map structure:
+     * CustomerId → { Month → Points, TOTAL → Total Points }
+     *
+     * @return map containing reward breakdown per customer
+     */
     public Map<String, Map<String, Integer>> calculateRewards() {
 
         List<Transaction> transactions = transactionRepository.getAllTransactions();
@@ -49,8 +76,10 @@ public class RewardService {
 
             Map<String, Integer> monthlyData = result.get(customerId);
 
+            // accumulate monthly points
             monthlyData.put(month, monthlyData.getOrDefault(month, 0) + points);
 
+            // accumulate total points
             monthlyData.put("TOTAL", monthlyData.getOrDefault("TOTAL", 0) + points);
         }
 

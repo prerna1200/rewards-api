@@ -2,7 +2,10 @@ package com.example.rewardsapi.model;
 
 import java.time.LocalDate;
 
-// Represents a customer transaction
+/**
+ * Represents a transaction made by a customer.
+ * Contains customer identifier, transaction amount and date.
+ */
 public class Transaction {
 
     private String customerId;

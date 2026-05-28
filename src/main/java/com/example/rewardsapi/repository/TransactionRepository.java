@@ -7,10 +7,19 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-// Acts as in-memory data source
+/**
+ * Repository class acting as an in-memory data source.
+ * Provides sample transaction data for multiple customers
+ * across different months.
+ */
 @Repository
 public class TransactionRepository {
 
+    /**
+     * Returns a list of sample transactions used for reward calculation.
+     *
+     * @return list of transactions for multiple customers
+     */
     public List<Transaction> getAllTransactions() {
 
         List<Transaction> transactions = new ArrayList<>();
