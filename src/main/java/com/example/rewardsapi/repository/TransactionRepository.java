@@ -12,5 +12,7 @@ import java.util.List;
  */
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
+// get all transactions for a specific customer
     List<Transaction> findByCustomerId(String customerId);
+
 }

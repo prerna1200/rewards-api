@@ -1,97 +1,54 @@
 # Rewards API
 
-This project implements a REST API using Spring Boot to calculate reward points for customers based on their transactions over a three-month period.
+This project is a Spring Boot based REST API that calculates reward points for customers based on their transaction history over a period of time.
+
+---
 
 ## Problem Statement
 
-A retailer offers a reward system where:
+A retailer provides a reward program to its customers based on the amount spent in each transaction:
 
-- 2 points are given for every dollar spent above 100
-- 1 point is given for every dollar spent between 50 and 100
-- No points are given for spending 50 or less
+- 2 points are awarded for every dollar spent above $100
+- 1 point is awarded for every dollar spent between $50 and $100
+- No points are awarded for spending $50 or less
 
-Example:
-A transaction of 120 results in:
-(120 - 100) * 2 + (100 - 50) * 1 = 40 + 50 = 90 points
+### Example
+
+For a transaction of $120:
+
+- (120 - 100) * 2 = 40 points
+- (100 - 50) * 1 = 50 points
+
+**Total = 90 reward points**
+
+---
 
 ## Features
 
-- Spring Boot based REST API
-- Reward point calculation for each transaction
-- Monthly reward calculation per customer
-- Total reward calculation per customer
-- Multiple customers with multiple transactions
-- In-memory dataset used for demonstration
-- Basic exception handling included
+- RESTful API built using Spring Boot
+- Reward calculation based on transaction amount
+- Monthly reward points per customer
+- Total reward points calculation
+- Supports multiple customers with multiple transactions
+- Pagination supported for large data sets
+- DTO-based clean response structure
+- Input validation using Jakarta Validation
+- Global exception handling implemented
+- In-memory H2 database used for demonstration
+- Structured and modular project design
+
+---
 
 ## Tech Stack
 
 - Java 21
-- Spring Boot
+- Spring Boot 3
+- Spring Data JPA
+- H2 Database
 - Maven
+- JUnit & Mockito (for testing)
+
+---
 
 ## Project Structure
 
-com.example.rewardsapi
-controller
-service
-repository
-model
-dto
-exception
-
-## How to Run
-
-1. Clone the repository:
-   git clone https://github.com/prerna1200/rewards-api.git
-
-2. Open the project in IntelliJ IDEA
-
-3. Run the main class:
-   RewardsApiApplication.java
-
-## API Endpoint
-
-GET /rewards
-
-Example:
-http://localhost:8080/rewards
-
-## Sample Output
-
-{
-"C1": {
-"JANUARY": 115,
-"FEBRUARY": 250,
-"MARCH": 40,
-"TOTAL": 405
-},
-"C2": {
-"JANUARY": 10,
-"FEBRUARY": 120,
-"MARCH": 0,
-"TOTAL": 130
-}
-}
-
-## Testing
-
-The API can be tested using:
-
-Browser:
-http://localhost:8080/rewards
-
-Command line:
-Invoke-RestMethod http://localhost:8080/rewards
-
-## Notes
-
-- Months are derived dynamically from transaction dates
-- No hardcoding of months is done
-- Clean and modular project structure is followed
-- Code is formatted and readable
-- Designed to be easily extendable to a real database
-
-## Author
-
-Prerna

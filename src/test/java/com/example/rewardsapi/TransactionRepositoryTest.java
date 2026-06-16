@@ -5,15 +5,16 @@ import com.example.rewardsapi.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
+@SpringBootTest
 class TransactionRepositoryTest {
 
     @Autowired
@@ -26,17 +27,29 @@ class TransactionRepositoryTest {
 
     @Test
     void save_createsNewTransaction() {
-        Transaction txn = new Transaction("C1", 120, LocalDate.of(2026, 1, 15));
+
+        Transaction txn = new Transaction(
+                "C1",
+                new BigDecimal("120"),
+                LocalDate.of(2026, 1, 15)
+        );
+
         Transaction saved = repo.save(txn);
 
         assertNotNull(saved.getId());
         assertEquals("C1", saved.getCustomerId());
-        assertEquals(120, saved.getAmount());
+        assertEquals(new BigDecimal("120"), saved.getAmount());
     }
 
     @Test
     void findById_retrievesExistingTransaction() {
-        Transaction txn = new Transaction("C2", 75, LocalDate.of(2026, 2, 20));
+
+        Transaction txn = new Transaction(
+                "C2",
+                new BigDecimal("75"),
+                LocalDate.of(2026, 2, 20)
+        );
+
         Transaction saved = repo.save(txn);
 
         Optional<Transaction> found = repo.findById(saved.getId());
@@ -47,9 +60,10 @@ class TransactionRepositoryTest {
 
     @Test
     void findByCustomerId_returnAllForCustomer() {
-        repo.save(new Transaction("C1", 100, LocalDate.of(2026, 1, 10)));
-        repo.save(new Transaction("C1", 50, LocalDate.of(2026, 1, 20)));
-        repo.save(new Transaction("C2", 200, LocalDate.of(2026, 2, 15)));
+
+        repo.save(new Transaction("C1", new BigDecimal("100"), LocalDate.of(2026, 1, 10)));
+        repo.save(new Transaction("C1", new BigDecimal("50"), LocalDate.of(2026, 1, 20)));
+        repo.save(new Transaction("C2", new BigDecimal("200"), LocalDate.of(2026, 2, 15)));
 
         List<Transaction> c1List = repo.findByCustomerId("C1");
         List<Transaction> c2List = repo.findByCustomerId("C2");
@@ -60,7 +74,8 @@ class TransactionRepositoryTest {
 
     @Test
     void findByCustomerId_emptyWhenNotFound() {
-        repo.save(new Transaction("C1", 100, LocalDate.of(2026, 1, 10)));
+
+        repo.save(new Transaction("C1", new BigDecimal("100"), LocalDate.of(2026, 1, 10)));
 
         List<Transaction> result = repo.findByCustomerId("UNKNOWN");
 
@@ -69,8 +84,9 @@ class TransactionRepositoryTest {
 
     @Test
     void findAll_returnsAllTransactions() {
-        repo.save(new Transaction("C1", 100, LocalDate.of(2026, 1, 10)));
-        repo.save(new Transaction("C2", 50, LocalDate.of(2026, 2, 20)));
+
+        repo.save(new Transaction("C1", new BigDecimal("100"), LocalDate.of(2026, 1, 10)));
+        repo.save(new Transaction("C2", new BigDecimal("50"), LocalDate.of(2026, 2, 20)));
 
         List<Transaction> all = repo.findAll();
 
@@ -79,25 +95,26 @@ class TransactionRepositoryTest {
 
     @Test
     void update_modifiesAmount() {
-        Transaction txn = new Transaction("C1", 100, LocalDate.of(2026, 1, 10));
+
+        Transaction txn = new Transaction("C1", new BigDecimal("100"), LocalDate.of(2026, 1, 10));
         Transaction saved = repo.save(txn);
 
-        saved.setAmount(150);
+        saved.setAmount(new BigDecimal("150"));
         Transaction updated = repo.save(saved);
 
-        assertEquals(150, updated.getAmount());
+        assertEquals(new BigDecimal("150"), updated.getAmount());
         assertEquals(saved.getId(), updated.getId());
     }
 
     @Test
     void delete_removesTransaction() {
-        Transaction txn = new Transaction("C1", 100, LocalDate.of(2026, 1, 10));
+
+        Transaction txn = new Transaction("C1", new BigDecimal("100"), LocalDate.of(2026, 1, 10));
         Transaction saved = repo.save(txn);
-        Long id = saved.getId();
 
-        repo.deleteById(id);
+        repo.deleteById(saved.getId());
 
-        Optional<Transaction> found = repo.findById(id);
+        Optional<Transaction> found = repo.findById(saved.getId());
         assertFalse(found.isPresent());
     }
 }

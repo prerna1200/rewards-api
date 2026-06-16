@@ -1,58 +1,45 @@
 package com.example.rewardsapi.dto;
 
-import java.util.Map;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 
 /**
- * DTO to send reward response in structured format
+ * Represents reward details for a customer.
+ * Includes monthly rewards and total points.
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RewardResponse {
 
     private String customerId;
-    private Map<String, Integer> monthlyRewards;
+    private List<MonthlyReward> monthlyRewards;
     private int totalPoints;
 
-    // No-arg constructor required by Jackson for deserialization
+    // default constructor
     public RewardResponse() {}
 
-    public RewardResponse(String customerId, Map<String, Integer> monthlyRewards, int totalPoints) {
+    /**
+     * creates reward response for a customer
+     *
+     * @param customerId customer id
+     * @param monthlyRewards list of monthly rewards
+     * @param totalPoints total reward points
+     */
+    public RewardResponse(String customerId, List<MonthlyReward> monthlyRewards, int totalPoints) {
         this.customerId = customerId;
         this.monthlyRewards = monthlyRewards;
         this.totalPoints = totalPoints;
     }
 
-    // If you prefer immutability, remove setters — kept here for simplicity & Jackson.
-    public void setCustomerId(String customerId) {
-        this.customerId = customerId;
-    }
-
-    public void setMonthlyRewards(Map<String, Integer> monthlyRewards) {
-        this.monthlyRewards = monthlyRewards;
-    }
-
-    public void setTotalPoints(int totalPoints) {
-        this.totalPoints = totalPoints;
-    }
-
+    // returns customer id
     public String getCustomerId() {
         return customerId;
     }
 
-    public Map<String, Integer> getMonthlyRewards() {
+    // returns monthly reward details
+    public List<MonthlyReward> getMonthlyRewards() {
         return monthlyRewards;
     }
 
+    // returns total points
     public int getTotalPoints() {
         return totalPoints;
-    }
-
-    @Override
-    public String toString() {
-        return "RewardResponse{" +
-                "customerId='" + customerId + '\'' +
-                ", monthlyRewards=" + monthlyRewards +
-                ", totalPoints=" + totalPoints +
-                '}';
     }
 }

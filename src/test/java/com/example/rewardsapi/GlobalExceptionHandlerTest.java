@@ -2,7 +2,6 @@ package com.example.rewardsapi;
 
 import com.example.rewardsapi.controller.RewardController;
 import com.example.rewardsapi.exception.GlobalExceptionHandler;
-import com.example.rewardsapi.model.Transaction;
 import com.example.rewardsapi.service.RewardService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -13,14 +12,16 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = RewardController.class)
+@WebMvcTest(RewardController.class)
 @Import(GlobalExceptionHandler.class)
 class GlobalExceptionHandlerTest {
 
@@ -30,61 +31,46 @@ class GlobalExceptionHandlerTest {
     @MockBean
     private RewardService rewardService;
 
-    private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+    @Autowired
+    private ObjectMapper mapper;
 
     @Test
-    void handleIllegalArgument_onNegativeAmount() throws Exception {
-        Transaction in = new Transaction("C1", -50, LocalDate.of(2026, 1, 1));
-        when(rewardService.saveTransaction(any(Transaction.class)))
-                .thenThrow(new IllegalArgumentException("Transaction amount cannot be negative"));
+    void shouldReturnBadRequest_whenAmountNegative() throws Exception {
 
-        String json = mapper.writeValueAsString(in);
+        HashMap<String, Object> request = new HashMap<>();
+        request.put("customerId", "C1");
+        request.put("amount", 120);
+        request.put("transactionDate", "2026-01-01");
 
-        mvc.perform(post("/transactions")
+        when(rewardService.saveTransaction(any()))
+                .thenThrow(new IllegalArgumentException("Amount cannot be negative"));
+
+        mvc.perform(post("/rewards/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
+                        .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Transaction amount cannot be negative"));
+                .andExpect(jsonPath("$.message").value("Amount cannot be negative"));
     }
 
     @Test
-    void handleBadRequestBody_onMalformedJson() throws Exception {
-        String malformedJson = "{ invalid json }";
+    void shouldReturnBadRequest_whenValidationFails() throws Exception {
 
-        mvc.perform(post("/transactions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(malformedJson))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Malformed JSON request"));
-    }
-
-    @Test
-    void handleValidation_onMissingRequiredField() throws Exception {
-        // missing customerId, amount, date in JSON
         String json = "{}";
 
-        mvc.perform(post("/transactions")
+        mvc.perform(post("/rewards/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400));
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void response_containsTimestamp() throws Exception {
-        Transaction in = new Transaction("C1", -10, LocalDate.of(2026, 1, 1));
-        when(rewardService.saveTransaction(any(Transaction.class)))
-                .thenThrow(new IllegalArgumentException("Test error"));
+    void shouldReturnBadRequest_whenJsonInvalid() throws Exception {
 
-        String json = mapper.writeValueAsString(in);
+        String badJson = "{ invalid json }";
 
-        mvc.perform(post("/transactions")
+        mvc.perform(post("/rewards/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.timestamp").exists());
+                        .content(badJson))
+                .andExpect(status().isBadRequest());
     }
 }

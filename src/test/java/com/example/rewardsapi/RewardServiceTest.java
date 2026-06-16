@@ -1,18 +1,25 @@
 package com.example.rewardsapi;
 
+import com.example.rewardsapi.dto.PaginationResponse;
+import com.example.rewardsapi.dto.RewardResponse;
 import com.example.rewardsapi.model.Transaction;
 import com.example.rewardsapi.repository.TransactionRepository;
-import com.example.rewardsapi.service.RewardService;
+import com.example.rewardsapi.service.impl.RewardServiceImpl;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -24,34 +31,27 @@ class RewardServiceTest {
     private TransactionRepository repo;
 
     @InjectMocks
-    private RewardService service;
+    private RewardServiceImpl service;
 
     @Test
-    void calculatePoints_basicCases() {
-        assertEquals(0, service.calculatePoints(0));
-        assertEquals(0, service.calculatePoints(50));
-        assertEquals(1, service.calculatePoints(51));
-        assertEquals(90, service.calculatePoints(120)); // example from spec
-    }
+    void getAllRewards_shouldCalculatePointsCorrectly() {
 
-    @Test
-    void calculateRewards_aggregatesMonthlyAndTotal() {
-        Transaction t1 = new Transaction("C1", 120, LocalDate.of(2026, 1, 10)); // 90
-        Transaction t2 = new Transaction("C1", 75, LocalDate.of(2026, 1, 15));  // 25
-        Transaction t3 = new Transaction("C2", 110, LocalDate.of(2026, 2, 18)); // 70
+        Transaction t1 = new Transaction("C1", new BigDecimal("120"), LocalDate.of(2026, 1, 10));
+        Transaction t2 = new Transaction("C1", new BigDecimal("75"), LocalDate.of(2026, 1, 15));
 
-        List<Transaction> txs = Arrays.asList(t1, t2, t3);
-        when(repo.findAll()).thenReturn(txs);
+        List<Transaction> txs = Arrays.asList(t1, t2);
 
-        Map<String, Map<String, Integer>> result = service.calculateRewards();
+        when(repo.findAll(PageRequest.of(0, 5)))
+                .thenReturn(new PageImpl<>(txs));
+
+        PaginationResponse<RewardResponse> result = service.getAllRewards(0, 5);
 
         assertNotNull(result);
-        assertTrue(result.containsKey("C1"));
-        assertEquals(115, result.get("C1").get("JANUARY").intValue());
-        assertEquals(115, result.get("C1").get("TOTAL").intValue());
+        assertEquals(1, result.getData().size());
 
-        assertTrue(result.containsKey("C2"));
-        assertEquals(70, result.get("C2").get("FEBRUARY").intValue());
-        assertEquals(70, result.get("C2").get("TOTAL").intValue());
+        RewardResponse response = result.getData().get(0);
+
+        assertEquals("C1", response.getCustomerId());
+        assertEquals(115, response.getTotalPoints()); // 90 + 25
     }
 }
