@@ -7,8 +7,8 @@ import com.example.rewardsapi.model.Transaction;
 import com.example.rewardsapi.repository.TransactionRepository;
 import com.example.rewardsapi.service.RewardService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,14 +17,12 @@ import java.util.*;
 @Service
 public class RewardServiceImpl implements RewardService {
 
-    // repository to access database
     private final TransactionRepository repository;
 
     public RewardServiceImpl(TransactionRepository repository) {
         this.repository = repository;
     }
 
-    // calculate reward points based on amount
     private int calculatePoints(BigDecimal amount) {
 
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
@@ -44,7 +42,6 @@ public class RewardServiceImpl implements RewardService {
         return points;
     }
 
-    // get rewards for all customers with pagination
     @Override
     public PaginationResponse<RewardResponse> getAllRewards(int page, int size) {
 
@@ -53,12 +50,9 @@ public class RewardServiceImpl implements RewardService {
 
         Map<String, Map<String, Integer>> rewardMap = new HashMap<>();
 
-        // group transactions by customer and month
         for (Transaction t : pageData.getContent()) {
-
             String customerId = t.getCustomerId();
             String month = t.getTransactionDate().getMonth().toString();
-
             int points = calculatePoints(t.getAmount());
 
             rewardMap.putIfAbsent(customerId, new HashMap<>());
@@ -69,11 +63,9 @@ public class RewardServiceImpl implements RewardService {
 
         List<RewardResponse> responseList = new ArrayList<>();
 
-        // prepare final response
         for (String customerId : rewardMap.keySet()) {
 
             Map<String, Integer> monthlyMap = rewardMap.get(customerId);
-
             List<MonthlyReward> monthlyList = new ArrayList<>();
             int total = 0;
 
@@ -94,39 +86,36 @@ public class RewardServiceImpl implements RewardService {
         );
     }
 
-    // get rewards for a specific customer
     @Override
     public RewardResponse getCustomerRewards(String customerId) {
 
         List<Transaction> transactions = repository.findByCustomerId(customerId);
 
         if (transactions.isEmpty()) {
-            throw new RuntimeException("Customer not found");
+            throw new RuntimeException("Customer exists but no transactions found");
         }
 
         Map<String, Integer> monthlyMap = new HashMap<>();
 
         for (Transaction t : transactions) {
-
             String month = t.getTransactionDate().getMonth().toString();
             int points = calculatePoints(t.getAmount());
 
             monthlyMap.put(month, monthlyMap.getOrDefault(month, 0) + points);
         }
 
-        List<MonthlyReward> list = new ArrayList<>();
+        List<MonthlyReward> monthlyList = new ArrayList<>();
         int total = 0;
 
         for (String month : monthlyMap.keySet()) {
             int pts = monthlyMap.get(month);
             total += pts;
-            list.add(new MonthlyReward(month, pts));
+            monthlyList.add(new MonthlyReward(month, pts));
         }
 
-        return new RewardResponse(customerId, list, total);
+        return new RewardResponse(customerId, monthlyList, total);
     }
 
-    // get rewards for all customers for a given month
     @Override
     public Map<String, Integer> getRewardsByMonth(String monthName) {
 
@@ -138,7 +127,6 @@ public class RewardServiceImpl implements RewardService {
         for (Transaction t : transactions) {
 
             if (t.getTransactionDate().getMonth().toString().equals(month)) {
-
                 String customerId = t.getCustomerId();
                 int points = calculatePoints(t.getAmount());
 
@@ -149,7 +137,6 @@ public class RewardServiceImpl implements RewardService {
         return result;
     }
 
-    // save transaction to database
     @Override
     public Transaction saveTransaction(Transaction transaction) {
         return repository.save(transaction);

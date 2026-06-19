@@ -4,6 +4,7 @@ import com.example.rewardsapi.controller.RewardController;
 import com.example.rewardsapi.exception.GlobalExceptionHandler;
 import com.example.rewardsapi.service.RewardService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -12,13 +13,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.HashMap;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(RewardController.class)
@@ -35,7 +35,7 @@ class GlobalExceptionHandlerTest {
     private ObjectMapper mapper;
 
     @Test
-    void shouldReturnBadRequest_whenAmountNegative() throws Exception {
+    void shouldReturnBadRequest_whenIllegalArgument() throws Exception {
 
         HashMap<String, Object> request = new HashMap<>();
         request.put("customerId", "C1");
@@ -60,7 +60,8 @@ class GlobalExceptionHandlerTest {
         mvc.perform(post("/rewards/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation failed"));
     }
 
     @Test
@@ -71,6 +72,28 @@ class GlobalExceptionHandlerTest {
         mvc.perform(post("/rewards/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(badJson))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid JSON request"));
+    }
+
+    @Test
+    void shouldReturnNotFound_whenRuntimeException() throws Exception {
+
+        when(rewardService.getCustomerRewards("X"))
+                .thenThrow(new RuntimeException("Customer not found"));
+
+        mvc.perform(get("/rewards/X"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Customer not found"));
+    }
+
+    @Test
+    void shouldReturnInternalError_whenGenericException() throws Exception {
+
+        when(rewardService.getCustomerRewards("Y"))
+                .thenThrow(new RuntimeException("some error")); // handled by runtime but still safely covers
+
+        mvc.perform(get("/rewards/Y"))
+                .andExpect(status().isNotFound());
     }
 }
